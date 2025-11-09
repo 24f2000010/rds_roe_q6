@@ -1,0 +1,85 @@
+name: Multi-Platform Matrix Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node-version: 20
+            variant: ubuntu-node20
+          - os: windows-latest
+            node-version: 18
+            variant: windows-node18
+          - os: macos-latest
+            node-version: 20
+            variant: macos-node20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: matrix-91fbe9f
+        run: |
+          echo "Building for OS: ${{ matrix.os }}, Node.js version: ${{ matrix.node-version }}"
+          echo "Variant: ${{ matrix.variant }}"
+          echo "Build timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        shell: bash
+
+      - name: Generate build artifact
+        run: |
+          echo "Build output for OS: ${{ matrix.os }}, Node.js: ${{ matrix.node-version }}" > build-output.txt
+          echo "Variant: ${{ matrix.variant }}" >> build-output.txt
+          echo "Build ID: ${{ github.run_id }}" >> build-output.txt
+          echo "Commit: ${{ github.sha }}" >> build-output.txt
+          node --version >> build-output.txt
+        shell: bash
+
+      - name: Create JSON artifact metadata
+        run: |
+          cat > artifact-metadata.json << EOF
+          {
+            "os": "${{ matrix.os }}",
+            "node_version": "${{ matrix.node-version }}",
+            "variant": "${{ matrix.variant }}",
+            "build_id": "${{ github.run_id }}",
+            "commit_sha": "${{ github.sha }}",
+            "workflow": "${{ github.workflow }}",
+            "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          }
+          EOF
+        shell: bash
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-91fbe9f-${{ matrix.variant }}
+          path: |
+            build-output.txt
+            artifact-metadata.json
+          retention-days: 7
+
+      - name: Display build summary
+        run: |
+          echo "=== Build Summary ==="
+          echo "OS: ${{ matrix.os }}"
+          echo "Node.js: ${{ matrix.node-version }}"
+          echo "Variant: ${{ matrix.variant }}"
+          echo "Artifact: build-91fbe9f-${{ matrix.variant }}"
+          cat build-output.txt
+          cat artifact-metadata.json
+        shell: bash
+
