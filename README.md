@@ -3,7 +3,7 @@
 A comprehensive project containing multiple components for IoT sensor analytics, data processing, and CI/CD automation.
 
 ## 📁 Project Structure
-
+email : 24f2000010@ds.study.iitm.ac.in
 ```
 iot-analytics-project/
 ├── .github/workflows/     # GitHub Actions CI/CD workflows
